@@ -1,0 +1,41 @@
+#include <p18f4520.h>
+
+// CONFIG SETTINGS (UNCOMMENT IF NEEDED)
+// #pragma config OSC = HS     
+// #pragma config WDT = OFF    
+// #pragma config LVP = OFF    
+// #pragma config PBADEN = OFF 
+
+void myMsDelay(unsigned int time)  
+{
+    unsigned int i, j;
+    for (i = 0; i < time; i++)
+        for (j = 0; j < 275; j++);  // ~1ms delay
+}
+
+void main()
+{
+    TRISCbits.TRISC2 = 0;     // CCP1 (RC2) as Output
+    PR2 = 0x4E;               // PWM Period → ~4 kHz
+
+    CCP1CON = 0b00001100;     // CCP1 PWM Mode (CCP1M3:CCP1M0 = 1100)
+    T2CON = 0b00000111;       // Timer2 ON, Prescaler 1:16
+
+    while(1)
+    {
+        // ******** 25% DUTY CYCLE ********
+        CCPR1L = 0x13;        // High 8 bits of duty cycle
+        CCP1CONbits.DC1B = 0b00; // Low 2 bits
+        myMsDelay(2000);
+
+        // ******** 50% DUTY CYCLE ********
+        CCPR1L = 0x27;
+        CCP1CONbits.DC1B = 0b00;
+        myMsDelay(2000);
+
+        // ******** 75% DUTY CYCLE ********
+        CCPR1L = 0x3A;
+        CCP1CONbits.DC1B = 0b00;  // 75% approx, no need extra bits
+        myMsDelay(2000);
+    }
+}
