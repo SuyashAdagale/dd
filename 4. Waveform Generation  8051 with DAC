@@ -1,0 +1,52 @@
+square wave
+#include <reg51.h>
+
+void Tdelay()
+{
+    TH1 = 0xFF;      // Load high byte
+    TL1 = 0x9A;      // Load low byte (approx delay)
+
+    TR1 = 1;         // Start timer
+    while(TF1 == 0); // Wait for overflow
+    TR1 = 0;         // Stop timer
+    TF1 = 0;         // Clear overflow flag
+}
+
+void main()
+{
+    TMOD = 0x10;     // Timer1, Mode1 (16-bit timer)
+
+    while(1)
+    {
+        P1 = 0xFF;   // Square wave HIGH
+        Tdelay();
+
+        P1 = 0x00;   // Square wave LOW
+        Tdelay();
+    }
+} 
+
+
+ Triangular Wave: 
+
+#include <reg51.h>
+
+void main() 
+{
+    unsigned int x;
+
+    while(1)
+    {
+        // Rising part of the triangular wave
+        for(x = 0; x < 255; x++)
+        {
+            P1 = x;   // Output ramp up on Port 1
+        }
+
+        // Falling part of the triangular wave
+        for(x = 255; x > 0; x--)
+        {
+            P1 = x;   // Output ramp down on Port 1
+        }
+    }
+}
