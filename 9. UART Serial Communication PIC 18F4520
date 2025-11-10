@@ -1,0 +1,65 @@
+#include <p18F4520.h>
+
+//  Configuration Bits  //
+#pragma config OSC = HS
+#pragma config PWRT = OFF
+#pragma config WDT = OFF
+#pragma config DEBUG = OFF
+#pragma config LVP = OFF
+
+#define _XTAL_FREQ 20000000   // 20 MHz Crystal Frequency
+
+//  UART Transmit String Function 
+void Transmit_String(unsigned char *string)
+{
+    unsigned char i=0;
+    while(string[i] != '\0')     // Send till null character
+    {
+        while(PIR1bits.TXIF == 0);   // Wait for transmit buffer empty
+        TXREG = string[i];           // Load data for transmission
+        i++;
+    }
+}
+
+//  GLOBAL MESSAGES 
+unsigned char MSG1[] = "UART COMMUNICATION\r\n";
+unsigned char MSG2[] = "Received Data: ";
+unsigned char MSG3[] = "\r\n";
+
+void main(void)
+{
+    unsigned char j=0;
+    unsigned char RX_DATA[10];
+
+    //  UART Pin Configuration 
+    TRISCbits.TRISC7 = 1;   // RX = Input
+    TRISCbits.TRISC6 = 0;   // TX = Output
+
+    //  UART Initialization 
+    TXSTA = 0x24;     // TX enable, Async mode, High Baud Rate
+    RCSTA = 0x90;     // Serial port enable, Continuous Receive Enable
+    BAUDCON = 0x08;   // 8-bit BRG, BRG16 = 1
+
+    // Baud Rate = 9600 for 20MHz
+    SPBRG = 0x0A;
+    SPBRGH = 0x02;
+
+    //  Transmit Welcome Message 
+    Transmit_String(MSG1);
+
+    //  Receive 6 characters from user 
+    for(j = 0; j < 6; j++)
+    {
+        while(PIR1bits.RCIF == 0);  // Wait until data is received
+        RX_DATA[j] = RCREG;         // Read received character
+    }
+
+    RX_DATA[6] = '\0';              // End string
+
+    //  Display Received Data 
+    Transmit_String(MSG2);
+    Transmit_String(RX_DATA);
+    Transmit_String(MSG3);
+
+    while(1);    // Infinite loop
+}
