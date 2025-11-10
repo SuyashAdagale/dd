@@ -1,0 +1,91 @@
+SEVEN SEGMENT 0-9
+#include <reg51.h>
+
+// Function declarations
+void display(unsigned char byte);
+void delay();
+
+void main()
+{
+    P0 = 0x00; // 7-segment connected to Port 0 (output)
+    P1 = 0x04; // Optional: for digit control if multiple displays
+
+    while(1)
+    {
+        display(0xC0); // 0
+        display(0xF9); // 1
+        display(0xA4); // 2
+        display(0xB0); // 3
+        display(0x99); // 4
+        display(0x92); // 5
+        display(0x82); // 6
+        display(0xF8); // 7
+        display(0x80); // 8
+        display(0x90); // 9
+    }
+}
+
+void display(unsigned char byte)
+{
+    P0 = byte; // Send segment code to Port 0
+    delay();   // Wait before next digit
+}
+
+void delay()
+{
+    int i, j;
+    for (i = 0; i < 500; i++)
+        for (j = 0; j < 500; j++);
+}
+
+
+
+Code for (0-99)
+
+#include <reg51.h>
+
+#define SegOne 0x01   // Units place
+#define SegTwo 0x02   // Tens place
+
+void delay_ms(unsigned int ms_count)
+{
+    unsigned int i, j;
+    for (i = 0; i < ms_count; i++)
+    {
+        for (j = 0; j < 1275; j++);
+    }
+}
+
+void main()
+{
+    unsigned char seg_code[] = {
+        0xC0, 0xF9, 0xA4, 0xB0, 0x99,
+        0x92, 0x82, 0xF8, 0x80, 0x90
+    };
+
+    int cnt, num, tens, ones, i;
+
+    while (1)
+    {
+        for (cnt = 0; cnt <= 99; cnt++)
+        {
+            for (i = 0; i < 50; i++)
+            {
+                num = cnt;
+                ones = num % 10;
+                tens = num / 10;
+
+                P2 = SegOne;              // Enable Units
+                P1 = seg_code[ones];      // Show Units digit
+                delay_ms(5);
+
+                P2 = SegTwo;              // Enable Tens
+                P1 = seg_code[tens];      // Show Tens digit
+                delay_ms(5);
+            }
+        }
+    }
+}
+
+
+
