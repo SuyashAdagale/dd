@@ -1,0 +1,53 @@
+#include <p18f4520.h>
+
+// ******** CONFIGURATION BITS ********
+#pragma config OSC = HS
+#pragma config PWRT = OFF
+#pragma config WDT = OFF
+#pragma config DEBUG = OFF
+#pragma config LVP = OFF
+
+void timer_isr(void);
+
+// ******** INTERRUPT VECTOR ********
+#pragma code high_vector = 0x08
+void high_vector(void)
+{
+    _asm GOTO timer_isr _endasm   // Jump to ISR
+}
+#pragma code
+
+// ******** ISR DEFINITION ********
+#pragma interrupt timer_isr
+void timer_isr(void)
+{
+    // Reload Timer0 for 10 ms delay
+    TMR0H = 0x3C;
+    TMR0L = 0xB0;
+
+    PORTD = ~PORTD;               // Toggle PORTD (Square wave)
+
+    INTCONbits.TMR0IF = 0;        // Clear Timer0 Interrupt Flag
+}
+
+// ******** MAIN PROGRAM ********
+void main()
+{
+    ADCON1 = 0x0F;                // All ports digital I/O
+    TRISD = 0x00;                 // PORTD as Output
+    PORTD = 0xFF;                 // Initial output high
+
+    T0CON = 0x08;                 // Timer0: 16-bit, internal clock, no prescaler
+
+    // Initial load values
+    TMR0H = 0x3C;
+    TMR0L = 0xB0;
+
+    INTCONbits.TMR0IF = 0;        // Clear overflow flag
+    INTCONbits.TMR0IE = 1;        // Enable Timer0 Interrupt
+    INTCONbits.GIE = 1;           // Enable Global Interrupt
+
+    T0CONbits.TMR0ON = 1;         // Start Timer0
+
+    while(1);                     // Infinite loop – CPU idle, interrupt driven
+}
